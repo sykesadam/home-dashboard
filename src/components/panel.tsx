@@ -10,7 +10,10 @@ export function Panel({
 }) {
 	return (
 		<div
-			className={cn("p-2 rounded-lg bg-card flex flex-col gap-1", className)}
+			className={cn(
+				"p-2 rounded-lg h-full bg-card flex flex-col gap-1",
+				className,
+			)}
 		>
 			{children}
 		</div>
