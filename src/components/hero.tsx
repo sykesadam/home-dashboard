@@ -9,7 +9,7 @@ const findTime = () => {
 };
 
 function Time() {
-	const [time, setTime] = useState<string | null>(null);
+	const [time, setTime] = useState<string>("");
 
 	useEffect(() => {
 		setTime(findTime()); // set real value immediately after mount
@@ -17,12 +17,21 @@ function Time() {
 		return () => clearInterval(id); // cleanup, no leaked intervals
 	}, []);
 
+	const [hours, minutes, seconds] = time.split(":");
+
 	return (
 		<time
 			className="font-mono tabular-nums text-7xl font-medium"
 			suppressHydrationWarning
 		>
-			{time ?? "--:--:--"}
+			<span className="rounded-xl px-1 bg-card text-card-foreground">
+				{hours || "--"}
+			</span>
+			:
+			<span className="rounded-sm bg-card text-card-foreground">{minutes}</span>
+			:
+			<span className="rounded-sm bg-card text-card-foreground">{seconds}</span>
+			{/* {time ?? "--:--:--"} */}
 		</time>
 	);
 }
@@ -56,7 +65,7 @@ function DateLine() {
 
 export function Hero() {
 	return (
-		<header className="flex items-end justify-between gap-6 flex-wrap p-4">
+		<header className="shrink-0 flex items-end justify-between gap-6 flex-wrap p-4">
 			<Time />
 			<DateLine />
 		</header>

@@ -18,7 +18,7 @@ function App() {
 	return (
 		<main className="h-full flex flex-col">
 			<Hero />
-			<div className="grid grid-cols-4 grow gap-4 p-4 grid-rows-2 min-h-0">
+			<div className="grid grid-cols-4 gap-4 pt-0 p-4 grid-rows-2 min-h-0">
 				<DragDropProvider
 					onDragEnd={(event) => {
 						console.log("event", event);
