@@ -24,14 +24,7 @@ function Time() {
 			className="font-mono tabular-nums text-7xl font-medium"
 			suppressHydrationWarning
 		>
-			<span className="rounded-xl px-1 bg-card text-card-foreground">
-				{hours || "--"}
-			</span>
-			:
-			<span className="rounded-sm bg-card text-card-foreground">{minutes}</span>
-			:
-			<span className="rounded-sm bg-card text-card-foreground">{seconds}</span>
-			{/* {time ?? "--:--:--"} */}
+			{hours || "--"}:{minutes || "--"}:{seconds || "--"}
 		</time>
 	);
 }
@@ -55,17 +48,17 @@ function DateLine() {
 
 	return (
 		<div className="text-right text-muted-foreground">
-			<div className="capitalize text-lg" suppressHydrationWarning>
+			<p className="capitalize text-lg" suppressHydrationWarning>
 				{dateLine}
-			</div>
-			<div className="mt-1">Göteborg</div>
+			</p>
+			<p>Göteborg</p>
 		</div>
 	);
 }
 
 export function Hero() {
 	return (
-		<header className="shrink-0 flex items-end justify-between gap-6 flex-wrap p-4">
+		<header className="relative shrink-0 flex items-end justify-between gap-6 flex-wrap p-4">
 			<Time />
 			<DateLine />
 		</header>

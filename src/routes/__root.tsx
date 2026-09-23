@@ -6,9 +6,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { Hero } from "#/components/hero";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
+import { ThemeProvider } from "#/components/theme-provider";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import appCss from "../styles.css?url";
 
@@ -44,14 +42,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" suppressHydrationWarning className="dark">
+		<html lang="en" suppressHydrationWarning>
 			<head>
-				<script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 				<HeadContent />
 			</head>
 			<body className="font-sans antialiased h-screen selection:bg-[rgba(79,184,178,0.24)]">
-				{children}
-				{/* <Footer /> */}
+				<ThemeProvider defaultTheme="system" storageKey="theme">
+					{children}
+				</ThemeProvider>
+
 				<TanStackDevtools
 					config={{
 						position: "bottom-right",

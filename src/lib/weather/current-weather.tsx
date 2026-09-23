@@ -81,17 +81,22 @@ export function CurrentWeather({ className }: { className?: string }) {
 				</Dialog> */}
 			</CardHeader>
 
-			<CardContent>
+			<CardContent className="grow flex items-center">
 				<div className="flex gap-4 items-center">
 					<WeatherIcon
 						condition={currentWeather.weathercode}
-						className="size-12"
+						className="size-12 shrink-0"
 						aria-title={condition}
 					/>
-					<span className="font-medium text-accent-foreground text-3xl">
-						{currentWeather.temperature}
-						{currentWeatherUnits.temperature}
-					</span>
+					<div>
+						<span className="font-medium text-accent-foreground text-4xl">
+							{currentWeather.temperature}
+							{currentWeatherUnits.temperature}
+						</span>
+						<div className="text-muted-foreground text-sm">
+							{WEATHER_CODES[data.current_weather.weathercode] || "Okänd väder"}
+						</div>
+					</div>
 				</div>
 			</CardContent>
 			<CardFooter className="mt-auto text-muted-foreground grid grid-cols-2 gap-x-3">
