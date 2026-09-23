@@ -47,6 +47,7 @@ export function CurrentWeather({ className }: { className?: string }) {
 				<CardTitle>Väder</CardTitle>
 				<Dialog>
 					<DialogTrigger
+						nativeButton={false}
 						render={
 							<CardAction>
 								<Button type="button" variant="ghost" size="icon">
