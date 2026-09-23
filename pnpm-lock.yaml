@@ -80,6 +80,9 @@ importers:
       shadcn:
         specifier: ^4.21.0
         version: 4.21.0(typescript@6.0.3)
+      srvx:
+        specifier: ^1.0.5
+        version: 1.0.5
       tailwind-merge:
         specifier: ^3.7.0
         version: 3.7.0
@@ -3233,6 +3236,11 @@ packages:
 
   srvx@0.11.22:
     resolution: {integrity: sha512-LqZxxBDMKuMAZzFzJnDCkFOrs9MZQZr0LvHiO/SuSZVdQaXD7xQ5UWTUxheJrQPve1qk9MG2B/yttUvJxw8egQ==}
+    engines: {node: '>=20.16.0'}
+    hasBin: true
+
+  srvx@1.0.5:
+    resolution: {integrity: sha512-KvSKRpgPG/oaq3cyT614OQ2bAa7DynuGamivCZeoZzIUULOdbQz6wUtnnVuC4+DCx2Zglzo8v5gBYmWIWYhDxA==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -6775,6 +6783,8 @@ snapshots:
   source-map@0.7.6: {}
 
   srvx@0.11.22: {}
+
+  srvx@1.0.5: {}
 
   statuses@2.0.2: {}
 
