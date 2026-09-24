@@ -38,7 +38,7 @@ export function Departures({ className }: { className?: string }) {
 							</CardAction>
 						}
 					/>
-					<DialogContent className="sm:max-w-lg">
+					<DialogContent className="sm:max-w-2xl">
 						<DialogHeader>
 							<DialogTitle>Sök avgångar från Olskrokstorget</DialogTitle>
 						</DialogHeader>

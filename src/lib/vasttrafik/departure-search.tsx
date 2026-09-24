@@ -1,11 +1,12 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { OnScreenKeyboard } from "#/components/on-screen-keyboard";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { DepartureRow } from "./departure-row";
 import { departuresTowardsQuery, searchStopAreasQuery } from "./query";
-import type { Location } from "./types";
+import { type RecentStop, useRecentStops } from "./recent-stops";
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
 	const [debounced, setDebounced] = useState(value);
@@ -26,7 +27,13 @@ const Skeleton = () => (
 );
 
 export function DepartureSearch() {
-	const [destination, setDestination] = useState<Location | null>(null);
+	const [destination, setDestination] = useState<RecentStop | null>(null);
+	const { recent, add, remove } = useRecentStops();
+
+	const select = (stop: RecentStop) => {
+		add(stop);
+		setDestination(stop);
+	};
 
 	return destination ? (
 		<DeparturesTowards
@@ -34,14 +41,18 @@ export function DepartureSearch() {
 			onBack={() => setDestination(null)}
 		/>
 	) : (
-		<StopAreaSearch onSelect={setDestination} />
+		<StopAreaSearch recent={recent} onRemoveRecent={remove} onSelect={select} />
 	);
 }
 
 function StopAreaSearch({
+	recent,
+	onRemoveRecent,
 	onSelect,
 }: {
-	onSelect: (location: Location) => void;
+	recent: RecentStop[];
+	onRemoveRecent: (gid: string) => void;
+	onSelect: (stop: RecentStop) => void;
 }) {
 	const [text, setText] = useState("");
 	const q = useDebouncedValue(text.trim(), 300);
@@ -52,14 +63,37 @@ function StopAreaSearch({
 
 	return (
 		<div className="flex flex-col gap-3">
-			<Input
-				autoFocus
-				placeholder="Vart vill du åka?"
-				value={text}
-				onChange={(e) => setText(e.target.value)}
-			/>
-			<div className="flex flex-col max-h-96 overflow-y-auto">
-				{q.length < 2 ? null : isError ? (
+			<div className="relative">
+				<Input
+					autoFocus
+					// On-screen keyboard below replaces the device keyboard
+					inputMode="none"
+					placeholder="Vart vill du åka?"
+					value={text}
+					onChange={(e) => setText(e.target.value)}
+					className="h-10 text-base pr-10"
+				/>
+				{text && (
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						aria-label="Rensa"
+						onClick={() => setText("")}
+						className="absolute right-1.5 top-1/2 -translate-y-1/2"
+					>
+						<X className="size-4" />
+					</Button>
+				)}
+			</div>
+			<div className="flex flex-col h-56 overflow-y-auto">
+				{q.length < 2 ? (
+					<RecentStops
+						recent={recent}
+						onSelect={onSelect}
+						onRemove={onRemoveRecent}
+					/>
+				) : isError ? (
 					<p className="text-sm text-destructive py-2">
 						Kunde inte söka hållplatser.
 					</p>
@@ -83,7 +117,61 @@ function StopAreaSearch({
 					))
 				)}
 			</div>
+			<OnScreenKeyboard
+				onInput={(char) => setText((t) => t + char)}
+				onBackspace={() => setText((t) => t.slice(0, -1))}
+			/>
 		</div>
+	);
+}
+
+function RecentStops({
+	recent,
+	onSelect,
+	onRemove,
+}: {
+	recent: RecentStop[];
+	onSelect: (stop: RecentStop) => void;
+	onRemove: (gid: string) => void;
+}) {
+	if (recent.length === 0) {
+		return (
+			<p className="text-sm text-muted-foreground py-2">
+				Sök efter en hållplats för att se avgångar dit.
+			</p>
+		);
+	}
+
+	return (
+		<>
+			<h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground pb-1">
+				Senaste sökningar
+			</h3>
+			{recent.map((stop) => (
+				<div
+					key={stop.gid}
+					className="flex items-center border-b border-muted hover:bg-muted/50 rounded-xs"
+				>
+					<button
+						type="button"
+						onClick={() => onSelect(stop)}
+						className="flex grow items-center gap-2 py-2 px-1 text-left text-base"
+					>
+						<Clock className="size-4 shrink-0 text-muted-foreground" />
+						{stop.name}
+					</button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						aria-label={`Ta bort ${stop.name}`}
+						onClick={() => onRemove(stop.gid)}
+					>
+						<X className="size-4 text-muted-foreground" />
+					</Button>
+				</div>
+			))}
+		</>
 	);
 }
 
@@ -91,7 +179,7 @@ function DeparturesTowards({
 	destination,
 	onBack,
 }: {
-	destination: Location;
+	destination: RecentStop;
 	onBack: () => void;
 }) {
 	const { data, isPending, isError } = useQuery(
