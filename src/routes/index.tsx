@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
+import { WidgetBoundary } from "#/components/error-boundary";
 import { Hero } from "#/components/hero";
 import { buttonVariants } from "#/components/ui/button";
 import { calendarQueryOptions } from "#/lib/calendar/query";
@@ -21,6 +22,14 @@ export const Route = createFileRoute("/")({
 	},
 });
 
+// Shared by each widget and its error/loading fallback so they occupy the same cell
+const LAYOUT = {
+	hue: "col-span-3 row-span-7",
+	weather: "col-start-1 col-span-3 row-span-5",
+	departures: "row-start-1 col-start-4 col-span-6 row-span-12",
+	calendar: "row-start-1 col-start-10 col-span-3 row-span-6",
+};
+
 function App() {
 	return (
 		<main className="h-full flex flex-col relative">
@@ -36,10 +45,18 @@ function App() {
 			</Link>
 			<Hero />
 			<div className="grid grid-cols-12 gap-4 pt-0 p-4 grid-rows-12 min-h-0">
-				<HueLights className="col-span-3 row-span-7" />
-				<CurrentWeather className="col-start-1 col-span-3 row-span-5" />
-				<Departures className="row-start-1 col-start-4 col-span-6 row-span-12" />
-				<UpcomingEvents className="row-start-1 col-start-10 col-span-3 row-span-6" />
+				<WidgetBoundary title="Lampor" className={LAYOUT.hue}>
+					<HueLights className={LAYOUT.hue} />
+				</WidgetBoundary>
+				<WidgetBoundary title="Väder" className={LAYOUT.weather}>
+					<CurrentWeather className={LAYOUT.weather} />
+				</WidgetBoundary>
+				<WidgetBoundary title="Avgångar" className={LAYOUT.departures}>
+					<Departures className={LAYOUT.departures} />
+				</WidgetBoundary>
+				<WidgetBoundary title="Kalender" className={LAYOUT.calendar}>
+					<UpcomingEvents className={LAYOUT.calendar} />
+				</WidgetBoundary>
 			</div>
 		</main>
 	);

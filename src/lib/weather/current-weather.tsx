@@ -7,6 +7,7 @@ import {
 	WindIcon,
 	X,
 } from "lucide-react";
+import { ErrorMessage, QueryErrorBoundary } from "#/components/error-boundary";
 import { Button } from "#/components/ui/button";
 import {
 	Card,
@@ -60,7 +61,11 @@ export function CurrentWeather({ className }: { className?: string }) {
 						<DialogHeader>
 							<DialogTitle>Väder</DialogTitle>
 						</DialogHeader>
-						<DetailedWeather />
+						<QueryErrorBoundary
+							fallback={(props) => <ErrorMessage className="py-8" {...props} />}
+						>
+							<DetailedWeather />
+						</QueryErrorBoundary>
 					</DialogContent>
 				</Dialog>
 			</CardHeader>
