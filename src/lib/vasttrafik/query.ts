@@ -1,7 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { request } from "../utils";
-import type { Departures } from "./types";
+import type { Departures, Locations } from "./types";
+
+const API_BASE = "https://ext-api.vasttrafik.se/pr/v4";
 
 const tokenCache = { token: null, expiresAt: 0 };
 
@@ -36,7 +39,7 @@ async function fetchDepartures() {
 	const token = await getVasttrafikToken();
 	const data = await request<Departures>(
 		{
-			endpoint: `https://ext-api.vasttrafik.se/pr/v4/stop-areas/${process.env.VASTTRAFIK_STOP_ID}/departures`,
+			endpoint: `${API_BASE}/stop-areas/${process.env.VASTTRAFIK_STOP_ID}/departures`,
 			searchParams: {
 				limit: String(process.env.VASTTRAFIK_LIMIT),
 			},
@@ -73,3 +76,54 @@ export const departuresQuery = queryOptions({
 	refetchInterval: 60_000, // poll every 60s, same cadence as before
 	staleTime: 30_000, // treat data as fresh for 30s — avoids duplicate fetches if multiple components mount this query around the same time
 });
+
+// --- Search: stop areas by name, for the departure search dialog ---
+export const searchStopAreasFn = createServerFn()
+	.inputValidator(z.object({ q: z.string().min(2) }))
+	.handler(async ({ data }) => {
+		const token = await getVasttrafikToken();
+		return request<Locations>(
+			{
+				endpoint: `${API_BASE}/locations/by-text`,
+				searchParams: { q: data.q, types: "stoparea", limit: "10" },
+			},
+			{ headers: { Authorization: `Bearer ${token}` } },
+		);
+	});
+
+export function searchStopAreasQuery(q: string) {
+	return queryOptions({
+		queryKey: ["transit", "stop-areas", q],
+		queryFn: () => searchStopAreasFn({ data: { q } }),
+		enabled: q.length >= 2,
+		staleTime: 60_000 * 60,
+	});
+}
+
+// Departures from our home stop that pass through the given stop area
+export const getDeparturesTowardsFn = createServerFn()
+	.inputValidator(z.object({ directionGid: z.string() }))
+	.handler(async ({ data }) => {
+		const token = await getVasttrafikToken();
+		return request<Departures>(
+			{
+				endpoint: `${API_BASE}/stop-areas/${process.env.VASTTRAFIK_STOP_ID}/departures`,
+				searchParams: {
+					directionGid: data.directionGid,
+					limit: "10",
+					// Default window is ~1h, too short to fill 10 departures on sparse lines
+					timeSpanInMinutes: "1439",
+				},
+			},
+			{ headers: { Authorization: `Bearer ${token}` } },
+		);
+	});
+
+export function departuresTowardsQuery(directionGid: string) {
+	return queryOptions({
+		queryKey: ["transit", "departures", directionGid],
+		queryFn: () => getDeparturesTowardsFn({ data: { directionGid } }),
+		refetchInterval: 60_000,
+		staleTime: 30_000,
+	});
+}

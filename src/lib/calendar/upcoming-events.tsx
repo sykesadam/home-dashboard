@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { cn } from "cn";
 import { CalendarOff } from "lucide-react";
 import { useState } from "react";
+import { FilterButton } from "#/components/filter-button";
 import { Card, CardContent, CardHeader } from "#/components/ui/card";
 import { type CalendarEvent, calendarQueryOptions } from "./query";
 
@@ -67,40 +68,6 @@ function groupByDay(events: CalendarEvent[], now: Date) {
 		groups.set(key, group);
 	}
 	return [...groups.entries()];
-}
-
-function FilterButton({
-	active,
-	onClick,
-	color,
-	children,
-}: {
-	active: boolean;
-	onClick: () => void;
-	color?: string;
-	children: React.ReactNode;
-}) {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			aria-pressed={active}
-			className={cn(
-				"inline-flex justify-center text-center first:rounded-l-full last:rounded-r-full items-center gap-1.5 px-3 py-1 text-xs font-medium transition-colors",
-				active
-					? "bg-primary text-primary-foreground"
-					: "bg-muted text-muted-foreground hover:bg-muted/70",
-			)}
-		>
-			{color && (
-				<span
-					className="size-2 rounded-full"
-					style={{ backgroundColor: color }}
-				/>
-			)}
-			{children}
-		</button>
-	);
 }
 
 export function UpcomingEvents({ className }: { className?: string }) {

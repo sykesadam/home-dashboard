@@ -4,6 +4,8 @@ import { Hero } from "#/components/hero";
 import { buttonVariants } from "#/components/ui/button";
 import { calendarQueryOptions } from "#/lib/calendar/query";
 import { UpcomingEvents } from "#/lib/calendar/upcoming-events";
+import { HueLights } from "#/lib/hue/hue-lights";
+import { hueQuery } from "#/lib/hue/query";
 import { Departures } from "#/lib/vasttrafik/departures";
 import { departuresQuery } from "#/lib/vasttrafik/query";
 import { CurrentWeather } from "#/lib/weather/current-weather";
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/")({
 		context.queryClient.query(currentWeatherQuery);
 		context.queryClient.query(departuresQuery);
 		context.queryClient.query(calendarQueryOptions);
+		context.queryClient.query(hueQuery);
 	},
 });
 
@@ -33,9 +36,10 @@ function App() {
 			</Link>
 			<Hero />
 			<div className="grid grid-cols-12 gap-4 pt-0 p-4 grid-rows-12 min-h-0">
-				<CurrentWeather className="col-span-3 row-span-5" />
-				<Departures className="h-full col-span-6 row-span-12" />
-				<UpcomingEvents className="col-start-1 col-span-3 row-span-7" />
+				<HueLights className="col-span-3 row-span-7" />
+				<CurrentWeather className="col-start-1 col-span-3 row-span-5" />
+				<Departures className="row-start-1 col-start-4 col-span-6 row-span-12" />
+				<UpcomingEvents className="row-start-1 col-start-10 col-span-3 row-span-6" />
 			</div>
 		</main>
 	);

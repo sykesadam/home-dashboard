@@ -62,3 +62,20 @@ export interface Links {
 	next: string;
 	current: string;
 }
+
+export interface Locations {
+	results: Location[];
+	pagination: Pagination;
+	links: Links;
+}
+
+export interface Location {
+	gid: string;
+	name: string;
+	locationType: string;
+	latitude: number;
+	longitude: number;
+	platform?: string;
+	straightLineDistanceInMeters?: number;
+	hasLocalService?: boolean;
+}

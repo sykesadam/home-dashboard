@@ -89,7 +89,7 @@ export const getDetailedWeatherFn =
 export const currentWeatherQuery = queryOptions({
 	queryKey: ["weather", "current"],
 	queryFn: getCurrentWeatherFn,
-	refetchInterval: 60_000 * 15,
+	refetchInterval: 60_000 * 10,
 });
 
 // Builds a "day 0 only" DetailedWeatherPayload out of the lightweight
