@@ -122,13 +122,38 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
-  button:not(:disabled), [role="button"]:not(:disabled) {
-    cursor: pointer;
-  }
   html {
     @apply font-sans;
   }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  :where(button, a, [role="button"]) {
+    position: relative;
+  }
+
+  :where(button, a, [role="button"])::after {
+    content: "";
+    position: absolute;
+    /* Only grows the hit area when the element is smaller than 48px, per axis */
+    top: min(0px, calc((100% - 48px) / 2));
+    bottom: min(0px, calc((100% - 48px) / 2));
+    left: min(0px, calc((100% - 48px) / 2));
+    right: min(0px, calc((100% - 48px) / 2));
+  }
+
+  html, body {
+    overscroll-behavior: none;          /* no rubber-banding / pull-to-refresh */
+    touch-action: manipulation;         /* removes double-tap zoom delay */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;                  /* re-enable on inputs only */
+    cursor: none;                       /* hide the mouse cursor */
+  }
+  input, textarea { user-select: text; }
+
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
 }

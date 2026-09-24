@@ -63,23 +63,6 @@ export function CurrentWeather({ className }: { className?: string }) {
 						<DetailedWeather />
 					</DialogContent>
 				</Dialog>
-				{/* <Dialog.Portal>
-						<Dialog.Popup className="dialog-popup fixed left-1/2 top-1/2 w-[min(90vw,480px)] max-h-[85vh] overflow-y-auto -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-surface p-6 shadow-xl">
-							<div className="flex items-center justify-between mb-2">
-								<Dialog.Close
-									render={
-										<button
-											type="button"
-											className="rounded-full p-1 hover:bg-muted"
-										/>
-									}
-								>
-									<X className="size-4" />
-								</Dialog.Close>
-							</div>
-						</Dialog.Popup>
-					</Dialog.Portal>
-				</Dialog> */}
 			</CardHeader>
 
 			<CardContent className="grow flex items-center">

@@ -11,7 +11,14 @@ const config = defineConfig({
 		port: 3000,
 	},
 	resolve: { tsconfigPaths: true },
-	plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
+	plugins: [
+		devtools(),
+		tailwindcss(),
+		tanstackStart({
+			spa: { enabled: true },
+		}),
+		viteReact(),
+	],
 });
 
 export default config;
