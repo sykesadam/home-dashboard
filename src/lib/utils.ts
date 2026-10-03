@@ -10,6 +10,13 @@ function createUrl(urlObj: URLObj) {
 	return url;
 }
 
+/** One consistent "a fetch is happening" log line, shared by every query lib. */
+export function logRequest(lib: string, description: string) {
+	console.log(
+		`[${lib}] fetching ${description} at ${new Date().toISOString()}`,
+	);
+}
+
 export class RequestError extends Error {
 	status?: number;
 	url: string;

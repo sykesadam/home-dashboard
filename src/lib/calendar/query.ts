@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import ical from "node-ical"; // >= 0.20 (has expandRecurringEvent)
+import { logRequest } from "../utils";
 import { CALENDARS } from "./config";
 
 export type CalendarEvent = {
@@ -37,6 +38,8 @@ async function fetchSource(
 	start: Date,
 	end: Date,
 ): Promise<CachedEvent[]> {
+	logRequest("calendar", source.name);
+
 	const res = await fetch(source.url, { signal: AbortSignal.timeout(10_000) });
 	if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -69,9 +72,6 @@ async function fetchSource(
 		}
 	}
 
-	console.log(
-		`[calendar] ${source.name}: ${events.length} occurrences between ${start.toISOString()} and ${end.toISOString()}`,
-	);
 	return events;
 }
 

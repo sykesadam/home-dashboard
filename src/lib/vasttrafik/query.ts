@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { request } from "../utils";
+import { logRequest, request } from "../utils";
 import type { Departures, Locations } from "./types";
 
 const API_BASE = "https://ext-api.vasttrafik.se/pr/v4";
@@ -37,6 +37,12 @@ async function getVasttrafikToken() {
 
 async function fetchDepartures() {
 	const token = await getVasttrafikToken();
+
+	logRequest(
+		"vasttrafik",
+		`departures for stop ${process.env.VASTTRAFIK_STOP_ID}`,
+	);
+
 	const data = await request<Departures>(
 		{
 			endpoint: `${API_BASE}/stop-areas/${process.env.VASTTRAFIK_STOP_ID}/departures`,
@@ -49,23 +55,7 @@ async function fetchDepartures() {
 		},
 	);
 
-	console.log("data", data);
-
 	return data;
-
-	// return data.results.map((dep) => {
-	// 	const journey = dep.serviceJourney ?? {};
-	// 	const line = journey.line ?? {};
-	// 	const planned = dep.plannedTime;
-	// 	const estimated = dep.estimatedTime ?? planned;
-	// 	return {
-	// 		line: line.shortName ?? "?",
-	// 		direction: journey.direction ?? "",
-	// 		planned,
-	// 		estimated,
-	// 		cancelled: dep.isCancelled ?? false,
-	// 	};
-	// });
 }
 
 export const getDeparturesFn = createServerFn().handler(fetchDepartures);

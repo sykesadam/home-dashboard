@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
-import { request } from "../utils";
+import { logRequest, request } from "../utils";
 
 // --- Lightweight: just today, for the widget ---
 type CurrentWeatherPayload = {
@@ -38,6 +38,8 @@ type DetailedWeatherPayload = CurrentWeatherPayload & {
 };
 
 async function fetchCurrentWeather(): Promise<CurrentWeatherPayload> {
+	logRequest("weather", "current weather");
+
 	return request<CurrentWeatherPayload>(
 		{
 			endpoint: "https://api.open-meteo.com/v1/forecast",
@@ -56,6 +58,8 @@ async function fetchCurrentWeather(): Promise<CurrentWeatherPayload> {
 }
 
 async function fetchDetailedWeather(): Promise<DetailedWeatherPayload> {
+	logRequest("weather", "detailed weather");
+
 	return request<DetailedWeatherPayload>(
 		{
 			endpoint: "https://api.open-meteo.com/v1/forecast",

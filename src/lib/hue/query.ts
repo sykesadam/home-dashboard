@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { request } from "../utils";
+import { logRequest, request } from "../utils";
 
 // Local Hue bridge, v1 API.
 // Get a username by pressing the bridge link button, then:
@@ -102,6 +102,8 @@ const byName = (a: HueTarget, b: HueTarget) =>
 	a.name.localeCompare(b.name, "sv");
 
 async function fetchHue(): Promise<HueData> {
+	logRequest("hue", "lights and groups");
+
 	const [lights, groups] = await Promise.all([
 		request<HueLightsPayload>(apiUrl("lights"), { method: "GET" }),
 		request<HueGroupsPayload>(apiUrl("groups"), { method: "GET" }),
