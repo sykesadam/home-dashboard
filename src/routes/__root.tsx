@@ -1,19 +1,24 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { lazy, Suspense } from "react";
 import { BouncingClock } from "#/components/bouncing-clock";
 import { ThemeProvider } from "#/components/theme-provider";
-import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import { useBouncingClockSetting } from "../lib/bouncing-clock-setting";
 import { useIdleQueryPause } from "../lib/idle-query-pause";
 import { useKeepAwakeSetting, useScreenWakeLock } from "../lib/keep-awake";
 import { useIdle } from "../lib/use-idle";
 import appCss from "../styles.css?url";
+
+// Dev-only, and lazy so the devtools panels (which subscribe to router/query
+// state and re-render on every background poll) never end up in the
+// production bundle the kiosk actually loads.
+const DevTools = import.meta.env.DEV
+	? lazy(() => import("#/components/dev-tools"))
+	: null;
 
 interface MyRouterContext {
 	queryClient: QueryClient;
@@ -70,18 +75,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					{showClock ? <BouncingClock /> : children}
 				</ThemeProvider>
 
-				<TanStackDevtools
-					config={{
-						position: "bottom-right",
-					}}
-					plugins={[
-						{
-							name: "Tanstack Router",
-							render: <TanStackRouterDevtoolsPanel />,
-						},
-						TanStackQueryDevtools,
-					]}
-				/>
+				{DevTools && (
+					<Suspense fallback={null}>
+						<DevTools />
+					</Suspense>
+				)}
 				<Scripts />
 			</body>
 		</html>

@@ -38,8 +38,20 @@ export function BouncingClock() {
 		const box = boxRef.current;
 		if (!box) return;
 
-		let x = Math.random() * Math.max(window.innerWidth - box.offsetWidth, 0);
-		let y = Math.random() * Math.max(window.innerHeight - box.offsetHeight, 0);
+		// Measured once (and on resize) instead of inside `tick` — reading
+		// offsetWidth/offsetHeight every frame right after writing
+		// box.style.transform the frame before forces a synchronous layout
+		// on every single animation frame.
+		let boxWidth = box.offsetWidth;
+		let boxHeight = box.offsetHeight;
+		const measure = () => {
+			boxWidth = box.offsetWidth;
+			boxHeight = box.offsetHeight;
+		};
+		window.addEventListener("resize", measure);
+
+		let x = Math.random() * Math.max(window.innerWidth - boxWidth, 0);
+		let y = Math.random() * Math.max(window.innerHeight - boxHeight, 0);
 		let dx = Math.random() < 0.5 ? -1 : 1;
 		let dy = Math.random() < 0.5 ? -1 : 1;
 		let color = randomColor("");
@@ -53,8 +65,8 @@ export function BouncingClock() {
 			const deltaSeconds = (now - lastFrameTime) / 1000;
 			lastFrameTime = now;
 
-			const maxX = Math.max(window.innerWidth - box.offsetWidth, 0);
-			const maxY = Math.max(window.innerHeight - box.offsetHeight, 0);
+			const maxX = Math.max(window.innerWidth - boxWidth, 0);
+			const maxY = Math.max(window.innerHeight - boxHeight, 0);
 
 			x += dx * SPEED_PX_PER_SEC * deltaSeconds;
 			y += dy * SPEED_PX_PER_SEC * deltaSeconds;
@@ -89,7 +101,10 @@ export function BouncingClock() {
 		};
 
 		frame = requestAnimationFrame(tick);
-		return () => cancelAnimationFrame(frame);
+		return () => {
+			cancelAnimationFrame(frame);
+			window.removeEventListener("resize", measure);
+		};
 	}, []);
 
 	useEffect(() => {
