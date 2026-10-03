@@ -6,10 +6,13 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { BouncingClock } from "#/components/bouncing-clock";
 import { ThemeProvider } from "#/components/theme-provider";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
+import { useBouncingClockSetting } from "../lib/bouncing-clock-setting";
 import { useIdleQueryPause } from "../lib/idle-query-pause";
 import { useKeepAwakeSetting, useScreenWakeLock } from "../lib/keep-awake";
+import { useIdle } from "../lib/use-idle";
 import appCss from "../styles.css?url";
 
 interface MyRouterContext {
@@ -42,8 +45,20 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	const [keepAwake] = useKeepAwakeSetting();
-	useScreenWakeLock(keepAwake);
-	useIdleQueryPause({ disabled: keepAwake });
+	const [bouncingClockEnabled] = useBouncingClockSetting();
+	const idle = useIdle();
+
+	// Keep-awake wins outright: screen stays on and the dashboard stays
+	// visible, clock or no. Otherwise, if the bouncing-clock setting is on,
+	// hold the wake lock too so the screen doesn't blank before the clock
+	// gets a chance to show — it only actually appears once idle.
+	useScreenWakeLock(keepAwake || bouncingClockEnabled);
+	const showClock = !keepAwake && bouncingClockEnabled && idle;
+
+	// Queries go quiet once idle, same as the screen would on its own —
+	// unless keep-awake is on, in which case the dashboard (and its data)
+	// should always stay live.
+	useIdleQueryPause(idle && !keepAwake);
 
 	return (
 		<html lang="en" suppressHydrationWarning>
@@ -52,7 +67,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body className="font-sans antialiased h-screen selection:bg-[rgba(79,184,178,0.24)]">
 				<ThemeProvider defaultTheme="system" storageKey="theme">
-					{children}
+					{showClock ? <BouncingClock /> : children}
 				</ThemeProvider>
 
 				<TanStackDevtools

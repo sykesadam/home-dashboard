@@ -1,66 +1,9 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
-
-const STORAGE_KEY = "keep-screen-awake";
-
-function readStored(): boolean {
-	if (typeof window === "undefined") return false;
-	try {
-		return window.localStorage.getItem(STORAGE_KEY) === "true";
-	} catch {
-		return false;
-	}
-}
-
-type Listener = () => void;
-const listeners = new Set<Listener>();
-let cached = readStored();
-
-function emit() {
-	for (const listener of listeners) listener();
-}
-
-function subscribe(listener: Listener) {
-	listeners.add(listener);
-	return () => listeners.delete(listener);
-}
-
-function getSnapshot() {
-	return cached;
-}
-
-function getServerSnapshot() {
-	return false;
-}
-
-function setKeepAwake(next: boolean) {
-	cached = next;
-	try {
-		window.localStorage.setItem(STORAGE_KEY, String(next));
-	} catch {
-		// localStorage unavailable — setting just won't survive a reload
-	}
-	emit();
-}
-
-if (typeof window !== "undefined") {
-	// Picks up the setting changing in another tab/window
-	window.addEventListener("storage", (event) => {
-		if (event.key === STORAGE_KEY) {
-			cached = readStored();
-			emit();
-		}
-	});
-}
+import { useEffect, useRef } from "react";
+import { createSyncedBooleanSetting } from "./synced-setting";
 
 /** Reads/writes the "keep screen awake" setting, kept in sync across components and tabs. */
-export function useKeepAwakeSetting() {
-	const enabled = useSyncExternalStore(
-		subscribe,
-		getSnapshot,
-		getServerSnapshot,
-	);
-	return [enabled, setKeepAwake] as const;
-}
+export const useKeepAwakeSetting =
+	createSyncedBooleanSetting("keep-screen-awake");
 
 /**
  * Holds a Screen Wake Lock while `enabled` is true, telling the OS not to

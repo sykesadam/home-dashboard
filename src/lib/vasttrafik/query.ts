@@ -69,7 +69,7 @@ export const departuresQuery = queryOptions({
 
 // --- Search: stop areas by name, for the departure search dialog ---
 export const searchStopAreasFn = createServerFn()
-	.inputValidator(z.object({ q: z.string().min(2) }))
+	.validator(z.object({ q: z.string().min(2) }))
 	.handler(async ({ data }) => {
 		const token = await getVasttrafikToken();
 		return request<Locations>(
@@ -92,7 +92,7 @@ export function searchStopAreasQuery(q: string) {
 
 // Departures from our home stop that pass through the given stop area
 export const getDeparturesTowardsFn = createServerFn()
-	.inputValidator(z.object({ directionGid: z.string() }))
+	.validator(z.object({ directionGid: z.string() }))
 	.handler(async ({ data }) => {
 		const token = await getVasttrafikToken();
 		return request<Departures>(

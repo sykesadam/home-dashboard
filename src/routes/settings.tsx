@@ -4,6 +4,7 @@ import { ModeToggle } from "#/components/mode-toggle";
 import { buttonVariants } from "#/components/ui/button";
 import { Label } from "#/components/ui/label";
 import { Switch } from "#/components/ui/switch";
+import { useBouncingClockSetting } from "#/lib/bouncing-clock-setting";
 import { useKeepAwakeSetting } from "#/lib/keep-awake";
 
 export const Route = createFileRoute("/settings")({
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/settings")({
 
 function RouteComponent() {
 	const [keepAwake, setKeepAwake] = useKeepAwakeSetting();
+	const [bouncingClock, setBouncingClock] = useBouncingClockSetting();
 
 	return (
 		<div className="flex flex-col gap-4 mx-auto py-12 px-10 max-w-lg">
@@ -43,6 +45,21 @@ function RouteComponent() {
 					id="keep-awake"
 					checked={keepAwake}
 					onCheckedChange={setKeepAwake}
+				/>
+			</div>
+
+			<div className="flex items-center justify-between gap-4">
+				<div className="flex flex-col gap-0.5">
+					<Label htmlFor="bouncing-clock">Bouncing clock when idle</Label>
+					<p className="text-sm text-muted-foreground">
+						When the screen would otherwise sleep, show a bouncing clock
+						instead. Ignored while "Keep screen awake" is on.
+					</p>
+				</div>
+				<Switch
+					id="bouncing-clock"
+					checked={bouncingClock}
+					onCheckedChange={setBouncingClock}
 				/>
 			</div>
 		</div>

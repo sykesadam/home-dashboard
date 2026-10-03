@@ -27,7 +27,7 @@ const DEFAULT_COLOR = "#7FA8D9";
 // window so the fallback has something to find.
 const LOOKAHEAD_DAYS = 90;
 const CACHE_TTL_MS = 5 * 60 * 1000;
-const REFRESH_MS = 60 * 1000;
+const REFRESH_MS = 10 * 60 * 1000;
 
 // Server-side cache of ALL events in the lookahead window
 // (lives in the server process, shared across requests)
@@ -144,7 +144,8 @@ export const getCalendarEvents = createServerFn({ method: "GET" }).handler(
 export const calendarQueryOptions = queryOptions({
 	queryKey: ["calendar-events"],
 	queryFn: () => getCalendarEvents(),
-	// Cheap to poll: the server answers from its own 5 min cache
+	// Polls every 10 min; the server's own 5 min cache keeps any other,
+	// more frequent callers from re-hitting the upstream calendars.
 	staleTime: REFRESH_MS,
 	refetchInterval: REFRESH_MS,
 });

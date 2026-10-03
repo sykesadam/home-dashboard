@@ -1,10 +1,42 @@
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, CloudRain, SunIcon, WindIcon } from "lucide-react";
+import {
+	ArrowDown,
+	ArrowUp,
+	CloudRain,
+	SunIcon,
+	Sunrise,
+	Sunset,
+} from "lucide-react";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "#/components/ui/tabs";
 import { WEATHER_CODES } from "./constants";
 import { WeatherIcon } from "./icons";
-import { getDetailedWeatherQuery } from "./query";
+import {
+	filterHourly,
+	getDetailedWeatherQuery,
+	type HourlyWeather,
+} from "./query";
 
 const DAY_FORMATTER = new Intl.DateTimeFormat("sv-SE", { weekday: "short" });
+const TIME_FORMATTER = new Intl.DateTimeFormat("sv-SE", {
+	hour: "2-digit",
+	minute: "2-digit",
+});
+const HOUR_FORMATTER = new Intl.DateTimeFormat("sv-SE", { hour: "numeric" });
+const SKELETON_HOURS = Array.from(
+	{ length: 8 },
+	(_, i) => `skeleton-hour-${i}`,
+);
+
+// The current hour (still in progress) and everything after it — hours
+// that have already fully elapsed drop off the list.
+function dropPastHours(hourly: HourlyWeather | undefined) {
+	if (!hourly) return hourly;
+	const currentHour = new Date().getHours();
+	return filterHourly(
+		hourly,
+		(time) => new Date(time).getHours() >= currentHour,
+	);
+}
 
 export function DetailedWeather() {
 	const queryClient = useQueryClient();
@@ -12,87 +44,118 @@ export function DetailedWeather() {
 	const { daily, daily_units } = data;
 
 	const hasFullDetail = daily.uv_index_max !== undefined;
-	const days = Array.from({ length: 7 });
+	const hourly = dropPastHours(data.hourly);
 
 	return (
-		<div className="flex flex-col gap-4">
-			<div className="flex items-center gap-4">
-				<WeatherIcon
-					condition={data.current_weather.weathercode}
-					className="size-16"
-				/>
-				<div>
-					<div className="text-5xl font-medium text-accent-weather">
-						{data.current_weather.temperature}
-						{data.current_weather_units.temperature}
-					</div>
-					<div className="text-muted-foreground text-sm">
-						{WEATHER_CODES[data.current_weather.weathercode] || "Okänd väder"}
-					</div>
-				</div>
-			</div>
+		<Tabs defaultValue="today">
+			<TabsList>
+				<TabsTab value="today">Idag</TabsTab>
+				<TabsTab value="week">Kommande vecka</TabsTab>
+			</TabsList>
 
-			<div className="grid grid-cols-3 gap-3 text-sm text-muted-foreground">
-				<div className="flex items-center gap-1 whitespace-nowrap">
-					<WindIcon className="size-4" />
-					{data.current_weather.windspeed}
-					{data.current_weather_units.windspeed}
-				</div>
-				<div className="flex items-center gap-1">
-					<SunIcon className="size-4" />
-					{hasFullDetail ? (
-						`UV ${daily.uv_index_max?.[0]}`
-					) : (
-						<span className="h-4 w-10 rounded bg-muted animate-pulse" />
-					)}
-				</div>
-				<div className="flex items-center gap-1 whitespace-nowrap">
-					<CloudRain className="size-4" />
-					{daily.precipitation_probability_max[0]}%
-				</div>
-			</div>
+			<TabsPanel value="today">
+				<div className="flex flex-col gap-4">
+					<div className="h-72 overflow-y-auto scroll-fade">
+						<div className="flex flex-col divide-y divide-border pr-2">
+							{hourly
+								? hourly.time.map((time, i) => (
+										<div key={time} className="flex items-center gap-3 py-2">
+											<span className="w-10 text-sm font-medium">
+												{HOUR_FORMATTER.format(new Date(time))}
+											</span>
+											<WeatherIcon
+												condition={hourly.weathercode[i]}
+												className="size-6 shrink-0"
+											/>
+											<span className="flex-1 truncate text-sm text-muted-foreground">
+												{WEATHER_CODES[hourly.weathercode[i]] || "Okänd väder"}
+											</span>
+											<span className="flex items-center gap-1 text-sm text-muted-foreground">
+												<CloudRain className="size-3.5 shrink-0" />
+												{hourly.precipitation_probability[i]}%
+											</span>
+											<span className="w-12 text-right text-sm font-medium whitespace-nowrap">
+												{Math.round(hourly.temperature_2m[i])}
+												{data.hourly_units?.temperature_2m}
+											</span>
+										</div>
+									))
+								: SKELETON_HOURS.map((key) => (
+										<div key={key} className="flex items-center gap-3 py-2">
+											<div className="h-4 w-full animate-pulse rounded bg-muted" />
+										</div>
+									))}
+						</div>
+					</div>
 
-			<div className="flex flex-col divide-y divide-border">
-				{days.map((_, i) => {
-					const date = daily.time[i];
-					if (!date) {
+					<div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+						<span className="flex items-center gap-1">
+							<SunIcon className="size-4" />
+							{hasFullDetail ? (
+								`UV ${daily.uv_index_max?.[0]}`
+							) : (
+								<span className="h-4 w-10 rounded bg-muted animate-pulse" />
+							)}
+						</span>
+						{hasFullDetail && daily.sunrise?.[0] && daily.sunset?.[0] && (
+							<span className="flex items-center gap-2 whitespace-nowrap">
+								<span className="flex items-center gap-1">
+									<Sunrise className="size-4" />
+									{TIME_FORMATTER.format(new Date(daily.sunrise[0]))}
+								</span>
+								<span className="flex items-center gap-1">
+									<Sunset className="size-4" />
+									{TIME_FORMATTER.format(new Date(daily.sunset[0]))}
+								</span>
+							</span>
+						)}
+					</div>
+				</div>
+			</TabsPanel>
+
+			<TabsPanel value="week">
+				<div className="flex flex-col divide-y divide-border">
+					{Array.from({ length: 7 }).map((_, i) => {
+						const date = daily.time[i];
+						if (!date) {
+							return (
+								// biome-ignore lint/suspicious/noArrayIndexKey: from array
+								<div key={i} className="flex items-center gap-3 py-2">
+									<div className="h-4 w-full rounded bg-muted animate-pulse" />
+								</div>
+							);
+						}
 						return (
-							// biome-ignore lint/suspicious/noArrayIndexKey: from array
-							<div key={i} className="flex items-center gap-3 py-2">
-								<div className="h-4 w-full rounded bg-muted animate-pulse" />
+							<div key={date} className="flex items-center gap-3 py-2">
+								<span className="w-10 text-sm font-medium capitalize">
+									{i === 0 ? "Idag" : DAY_FORMATTER.format(new Date(date))}
+								</span>
+								<WeatherIcon
+									condition={daily.weathercode[i]}
+									className="size-6 shrink-0"
+								/>
+								<span className="flex-1 text-sm text-muted-foreground truncate">
+									{WEATHER_CODES[daily.weathercode[i]] || "Okänd väder"}
+								</span>
+								<span className="flex items-center gap-1 text-sm text-muted-foreground">
+									<CloudRain className="size-3.5 shrink-0" />
+									{daily.precipitation_probability_max[i]}%
+								</span>
+								<span className="w-12 text-right text-sm flex items-center justify-end gap-0.5 whitespace-nowrap">
+									<ArrowUp className="size-3.5 shrink-0" />
+									{daily.temperature_2m_max[i]}
+									{daily_units.temperature_2m_max}
+								</span>
+								<span className="w-12 text-right text-sm text-muted-foreground flex items-center justify-end gap-0.5 whitespace-nowrap">
+									<ArrowDown className="size-3.5 shrink-0" />
+									{daily.temperature_2m_min[i]}
+									{daily_units.temperature_2m_min}
+								</span>
 							</div>
 						);
-					}
-					return (
-						<div key={date} className="flex items-center gap-3 py-2">
-							<span className="w-10 text-sm font-medium capitalize">
-								{i === 0 ? "Idag" : DAY_FORMATTER.format(new Date(date))}
-							</span>
-							<WeatherIcon
-								condition={daily.weathercode[i]}
-								className="size-6 shrink-0"
-							/>
-							<span className="flex-1 text-sm text-muted-foreground truncate">
-								{WEATHER_CODES[daily.weathercode[i]] || "Okänd väder"}
-							</span>
-							<span className="flex items-center gap-1 text-sm text-muted-foreground">
-								<CloudRain className="size-3.5 shrink-0" />
-								{daily.precipitation_probability_max[i]}%
-							</span>
-							<span className="w-12 text-right text-sm flex items-center justify-end gap-0.5 whitespace-nowrap">
-								<ArrowUp className="size-3.5 shrink-0" />
-								{daily.temperature_2m_max[i]}
-								{daily_units.temperature_2m_max}
-							</span>
-							<span className="w-12 text-right text-sm text-muted-foreground flex items-center justify-end gap-0.5 whitespace-nowrap">
-								<ArrowDown className="size-3.5 shrink-0" />
-								{daily.temperature_2m_min[i]}
-								{daily_units.temperature_2m_min}
-							</span>
-						</div>
-					);
-				})}
-			</div>
-		</div>
+					})}
+				</div>
+			</TabsPanel>
+		</Tabs>
 	);
 }

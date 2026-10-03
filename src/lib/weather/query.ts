@@ -26,7 +26,7 @@ type CurrentWeatherPayload = {
 };
 
 // --- Full: 7 days + extra fields, for the dialog ---
-// Sunrise/sunset/uv/max-wind are optional because the placeholder
+// Sunrise/sunset/uv/max-wind/hourly are optional because the placeholder
 // (seeded from the lightweight query) won't have them yet.
 type DetailedWeatherPayload = CurrentWeatherPayload & {
 	daily: CurrentWeatherPayload["daily"] & {
@@ -35,6 +35,17 @@ type DetailedWeatherPayload = CurrentWeatherPayload & {
 		uv_index_max?: number[];
 		windspeed_10m_max?: number[];
 	};
+	hourly?: HourlyWeather;
+	hourly_units?: {
+		temperature_2m: string;
+	};
+};
+
+export type HourlyWeather = {
+	time: string[];
+	weathercode: number[];
+	temperature_2m: number[];
+	precipitation_probability: number[];
 };
 
 async function fetchCurrentWeather(): Promise<CurrentWeatherPayload> {
@@ -49,7 +60,7 @@ async function fetchCurrentWeather(): Promise<CurrentWeatherPayload> {
 				current_weather: "True",
 				daily:
 					"weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
-				forecast_days: 1,
+				forecast_days: "1",
 				timezone: process.env.TIMEZONE,
 			},
 		},
@@ -57,10 +68,41 @@ async function fetchCurrentWeather(): Promise<CurrentWeatherPayload> {
 	);
 }
 
+/** Keeps only the hours whose ISO timestamp satisfies `predicate`. */
+export function filterHourly(
+	hourly: HourlyWeather,
+	predicate: (time: string) => boolean,
+): HourlyWeather {
+	const indices = hourly.time.reduce<number[]>((acc, time, i) => {
+		if (predicate(time)) acc.push(i);
+		return acc;
+	}, []);
+	return {
+		time: indices.map((i) => hourly.time[i]),
+		weathercode: indices.map((i) => hourly.weathercode[i]),
+		temperature_2m: indices.map((i) => hourly.temperature_2m[i]),
+		precipitation_probability: indices.map(
+			(i) => hourly.precipitation_probability[i],
+		),
+	};
+}
+
+// Open-Meteo returns hourly data for the whole 7-day window (same length as
+// `daily`) — trim it down to just today's hours so the dialog only has to
+// deal with "today's hourly forecast", and so we're not shipping 168 hours
+// of data to the client for 24 of them to ever be shown.
+function filterHourlyToToday(
+	hourly: HourlyWeather,
+	today: string | undefined,
+): HourlyWeather {
+	if (!today) return hourly;
+	return filterHourly(hourly, (time) => time.startsWith(today));
+}
+
 async function fetchDetailedWeather(): Promise<DetailedWeatherPayload> {
 	logRequest("weather", "detailed weather");
 
-	return request<DetailedWeatherPayload>(
+	const payload = await request<DetailedWeatherPayload>(
 		{
 			endpoint: "https://api.open-meteo.com/v1/forecast",
 			searchParams: {
@@ -77,12 +119,24 @@ async function fetchDetailedWeather(): Promise<DetailedWeatherPayload> {
 					"uv_index_max",
 					"windspeed_10m_max",
 				].join(","),
-				forecast_days: 7,
+				hourly: [
+					"weathercode",
+					"temperature_2m",
+					"precipitation_probability",
+				].join(","),
+				forecast_days: "7",
 				timezone: process.env.TIMEZONE,
 			},
 		},
 		{ method: "GET" },
 	);
+
+	return {
+		...payload,
+		hourly: payload.hourly
+			? filterHourlyToToday(payload.hourly, payload.daily.time[0])
+			: undefined,
+	};
 }
 
 export const getCurrentWeatherFn =

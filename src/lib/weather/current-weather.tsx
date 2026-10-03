@@ -5,7 +5,6 @@ import {
 	CloudRain,
 	Maximize2,
 	WindIcon,
-	X,
 } from "lucide-react";
 import { ErrorMessage, QueryErrorBoundary } from "#/components/error-boundary";
 import { Button } from "#/components/ui/button";

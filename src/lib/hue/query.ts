@@ -125,7 +125,7 @@ async function fetchHue(): Promise<HueData> {
 export const getHueFn = createServerFn().handler(fetchHue);
 
 export const setHueFn = createServerFn({ method: "POST" })
-	.inputValidator(setHueInputSchema)
+	.validator(setHueInputSchema)
 	.handler(async ({ data }) => {
 		const path =
 			data.kind === "light"
