@@ -44,7 +44,7 @@ async function fetchSource(
 	const events: CachedEvent[] = [];
 
 	for (const item of Object.values(parsed)) {
-		if (!item || item.type !== "VEVENT") continue;
+		if (item?.type !== "VEVENT") continue;
 
 		// Expands RRULEs, applies EXDATEs and overridden instances
 		const occurrences = ical.expandRecurringEvent(item, {
