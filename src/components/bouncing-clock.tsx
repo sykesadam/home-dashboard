@@ -49,6 +49,10 @@ export function BouncingClock() {
 			boxHeight = box.offsetHeight;
 		};
 		window.addEventListener("resize", measure);
+		// The box's own size changes after mount too (web font swapping in,
+		// digits changing width), so re-measure whenever it does.
+		const observer = new ResizeObserver(measure);
+		observer.observe(box);
 
 		let x = Math.random() * Math.max(window.innerWidth - boxWidth, 0);
 		let y = Math.random() * Math.max(window.innerHeight - boxHeight, 0);
@@ -104,6 +108,7 @@ export function BouncingClock() {
 		return () => {
 			cancelAnimationFrame(frame);
 			window.removeEventListener("resize", measure);
+			observer.disconnect();
 		};
 	}, []);
 
@@ -122,9 +127,12 @@ export function BouncingClock() {
 		<div
 			ref={boxRef}
 			aria-hidden
-			className="fixed top-0 left-0 select-none font-heading text-7xl font-semibold tabular-nums will-change-transform"
+			className="fixed top-0 left-0 w-max select-none whitespace-nowrap font-heading text-7xl font-semibold tabular-nums will-change-transform"
 		>
-			<span ref={timeRef} />
+			{/* Rendered with the time already in it (not filled in by an effect) so
+			    the box has its real size when the animation effect first measures
+			    it. Only ever mounted client-side, so no hydration mismatch. */}
+			<span ref={timeRef}>{TIME_FORMATTER.format(new Date())}</span>
 		</div>
 	);
 }
